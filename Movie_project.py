@@ -4,7 +4,7 @@ import streamlit as st
 
 st.set_page_config(layout="wide", page_title="Movie Recommender")
 
-# --- CUSTOM CSS FOR UNIFORM POSTER SIZES & CARD UI ---
+# --- CUSTOM CSS FOR UNIFORM CARD UI & MULTI-LINE CLAMPING ---
 st.markdown(
     """
     <style>
@@ -14,7 +14,7 @@ st.markdown(
             border-radius: 8px;
             padding: 10px;
             text-align: center;
-            height: 420px;
+            height: 460px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -22,18 +22,36 @@ st.markdown(
         }
         .movie-card img {
             width: 100% !important;
-            height: 330px !important;
+            height: 300px !important;
             object-fit: cover !important;
             border-radius: 6px;
+        }
+        .movie-info {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            height: 90px;
         }
         .movie-title {
             font-size: 14px;
             font-weight: 600;
             color: #333;
-            margin-top: 8px;
+            margin-bottom: 4px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+        }
+        /* Forces text to strictly clamp to max 2 lines with ellipsis (...) */
+        .movie-desc {
+            font-size: 12px;
+            color: #666;
+            line-height: 1.4em;
+            height: 2.8em;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            text-overflow: ellipsis;
         }
     </style>
 """,
@@ -68,6 +86,7 @@ def get_recommendations(movie_name):
 
     poster_url = FALLBACK_IMAGE
     movie_details = {}
+    plot_text = "No description available for this movie."
     try:
       resp = requests.get(url, timeout=5)
       data = resp.json()
@@ -76,15 +95,23 @@ def get_recommendations(movie_name):
         if poster_val and poster_val != "N/A":
           poster_url = poster_val
         movie_details = data
+        if data.get("Plot") and data.get("Plot") != "N/A":
+          plot_text = data.get("Plot")
     except Exception:
       pass
 
-    recs.append({"name": name, "poster": poster_url, "details": movie_details})
+    recs.append({
+        "name": name,
+        "poster": poster_url,
+        "plot": plot_text,
+        "details": movie_details,
+    })
 
   return recs
 
 
 # Sidebar elements
+st.sidebar.image('flag.jpg')
 st.sidebar.title("🎬 About us")
 st.sidebar.write("We are a group of ML Engineers trying to learn NLP.")
 st.sidebar.title("📞 Contact us")
@@ -114,7 +141,6 @@ with col_list:
 
 recommendations = get_recommendations(selected_movie)
 
-# Fields to hide from the popup details view
 EXCLUDED_FIELDS = {
     "Response",
     "Poster",
@@ -136,8 +162,13 @@ if st.session_state.view_mode == "grid":
       st.markdown(
           f"""
                 <div class="movie-card">
-                    <img src="{rec['poster']}" onerror="this.onerror=null;this.src='https://via.placeholder.com/300x450?text=No+Image';">
-                    <div class="movie-title" title="{rec['name']}">{rec['name']}</div>
+                    <div>
+                        <img src="{rec['poster']}" onerror="this.onerror=null;this.src='https://via.placeholder.com/300x450?text=No+Image';">
+                    </div>
+                    <div class="movie-info">
+                        <div class="movie-title" title="{rec['name']}">{rec['name']}</div>
+                        <div class="movie-desc" title="{rec['plot']}">{rec['plot']}</div>
+                    </div>
                 </div>
             """,
           unsafe_allow_html=True,
@@ -160,7 +191,10 @@ else:
         st.image(rec["poster"], width=70)
       with c2:
         st.markdown(
-            f"<h5 style='padding-top: 15px; margin: 0;'>{rec['name']}</h5>",
+            f"""
+                <h5 style='margin: 0; padding-top: 5px;'>{rec['name']}</h5>
+                <p style='color: #666; font-size: 13px; margin: 4px 0 0 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;'>{rec['plot']}</p>
+            """,
             unsafe_allow_html=True,
         )
       with c3:
