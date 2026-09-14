@@ -14,7 +14,7 @@ st.markdown(
             border-radius: 8px;
             padding: 10px;
             text-align: center;
-            height: 480px;
+            height: 460px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -22,7 +22,7 @@ st.markdown(
         }
         .movie-card img {
             width: 100% !important;
-            height: 290px !important;
+            height: 300px !important;
             object-fit: cover !important;
             border-radius: 6px;
         }
@@ -41,6 +41,7 @@ st.markdown(
             text-overflow: ellipsis;
             white-space: nowrap;
         }
+        /* Forces text to strictly clamp to max 2 lines with ellipsis (...) */
         .movie-desc {
             font-size: 12px;
             color: #666;
@@ -76,8 +77,7 @@ def get_recommendations(movie_name):
   distances, indexes = model.kneighbors([mvc], n_neighbors=5)
 
   recs = []
-  # Reliable fallback image data URI or direct public image link to guarantee rendering
-  FALLBACK_IMAGE = "https://images.unsplash.com/photo-1485846234645-a62644f84728?w=300&auto=format&fit=crop&q=60"
+  FALLBACK_IMAGE = "https://via.placeholder.com/300x450?text=No+Image"
 
   for i in indexes[0][1:]:
     name = df.iloc[i]["name"]
@@ -159,14 +159,16 @@ if st.session_state.view_mode == "grid":
   cols = st.columns(len(recommendations))
   for col, rec in zip(cols, recommendations):
     with col:
-      # Native Streamlit image guarantees container integrity and avoids broken <img> DOM tags
-      st.image(rec["poster"], use_container_width=True)
-
       st.markdown(
           f"""
-                <div class="movie-info" style="height: 70px; margin-top: 5px;">
-                    <div class="movie-title" title="{rec['name']}">{rec['name']}</div>
-                    <div class="movie-desc" title="{rec['plot']}">{rec['plot']}</div>
+                <div class="movie-card">
+                    <div>
+                        <img src="{rec['poster']}" onerror="this.onerror=null;this.src='https://via.placeholder.com/300x450?text=No+Image';">
+                    </div>
+                    <div class="movie-info">
+                        <div class="movie-title" title="{rec['name']}">{rec['name']}</div>
+                        <div class="movie-desc" title="{rec['plot']}">{rec['plot']}</div>
+                    </div>
                 </div>
             """,
           unsafe_allow_html=True,
