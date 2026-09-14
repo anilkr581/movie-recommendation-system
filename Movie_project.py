@@ -133,10 +133,10 @@ col_title, col_grid, col_list = st.columns([10, 1, 1])
 with col_title:
   st.subheader("Recommended for you")
 with col_grid:
-  if st.button("⊞ Grid", use_container_width=True):
+  if st.button("⊞", use_container_width=True):
     st.session_state.view_mode = "grid"
 with col_list:
-  if st.button("☰ List", use_container_width=True):
+  if st.button("☰", use_container_width=True):
     st.session_state.view_mode = "list"
 
 recommendations = get_recommendations(selected_movie)
