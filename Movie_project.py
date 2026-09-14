@@ -59,7 +59,7 @@ def get_recommendations(movie_name):
   distances, indexes = model.kneighbors([mvc], n_neighbors=5)
 
   recs = []
-  FALLBACK_IMAGE = "noimage.png"
+  FALLBACK_IMAGE = "https://via.placeholder.com/300x450?text=No+Image"
 
   for i in indexes[0][1:]:
     name = df.iloc[i]["name"]
@@ -72,8 +72,9 @@ def get_recommendations(movie_name):
       resp = requests.get(url, timeout=5)
       data = resp.json()
       if data.get("Response") == "True":
-        if data.get("Poster") and data.get("Poster") != "N/A":
-          poster_url = data.get("Poster")
+        poster_val = data.get("Poster")
+        if poster_val and poster_val != "N/A":
+          poster_url = poster_val
         movie_details = data
     except Exception:
       pass
@@ -84,6 +85,7 @@ def get_recommendations(movie_name):
 
 
 # Sidebar elements
+st.sidebar.image('flag.jpg')
 st.sidebar.title("🎬 About us")
 st.sidebar.write("We are a group of ML Engineers trying to learn NLP.")
 st.sidebar.title("📞 Contact us")
@@ -116,25 +118,24 @@ recommendations = get_recommendations(selected_movie)
 # Render View Layouts
 if st.session_state.view_mode == "grid":
   cols = st.columns(len(recommendations))
-  for idx, (col, rec) in enumerate(zip(cols, recommendations)):
+  for col, rec in zip(cols, recommendations):
     with col:
       st.markdown(
           f"""
                 <div class="movie-card">
-                    <img src="{rec['poster']}" onerror="this.onerror=null;this.src='noimage.png';">
+                    <img src="{rec['poster']}" onerror="this.onerror=null;this.src='https://via.placeholder.com/300x450?text=No+Image';">
                     <div class="movie-title" title="{rec['name']}">{rec['name']}</div>
                 </div>
             """,
           unsafe_allow_html=True,
       )
 
-      # Pop-up window using st.popover (Standard built-in Streamlit component for popups)
       with st.popover("ℹ️ Details", use_container_width=True):
         st.subheader(rec["name"])
         details = rec["details"]
         if details:
           for key, val in details.items():
-            if key not in ["Response", "Poster"]:
+            if key not in ["Response", "Poster", "Ratings"]:
               st.markdown(f"✔ **{key}**: {val}")
         else:
           st.markdown("✔ **Status**: No extra details available")
@@ -143,9 +144,7 @@ else:
     with st.container(border=True):
       c1, c2, c3 = st.columns([1, 8, 2])
       with c1:
-        st.image(
-            rec["poster"], width=70, fallback="noimage.png"
-        )  # Streamlit native image fallback handler
+        st.image(rec["poster"], width=70)
       with c2:
         st.markdown(
             f"<h5 style='padding-top: 15px; margin: 0;'>{rec['name']}</h5>",
@@ -158,7 +157,7 @@ else:
           details = rec["details"]
           if details:
             for key, val in details.items():
-              if key not in ["Response", "Poster"]:
+              if key not in ["Response", "Poster", "Ratings"]:
                 st.markdown(f"✔ **{key}**: {val}")
           else:
             st.markdown("✔ **Status**: No extra details available")
