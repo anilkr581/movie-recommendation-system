@@ -85,7 +85,6 @@ def get_recommendations(movie_name):
 
 
 # Sidebar elements
-st.sidebar.image('flag.jpg')
 st.sidebar.title("🎬 About us")
 st.sidebar.write("We are a group of ML Engineers trying to learn NLP.")
 st.sidebar.title("📞 Contact us")
@@ -115,6 +114,20 @@ with col_list:
 
 recommendations = get_recommendations(selected_movie)
 
+# Fields to hide from the popup details view
+EXCLUDED_FIELDS = {
+    "Response",
+    "Poster",
+    "Ratings",
+    "imdbVotes",
+    "imdbID",
+    "Type",
+    "DVD",
+    "BoxOffice",
+    "Production",
+    "Website",
+}
+
 # Render View Layouts
 if st.session_state.view_mode == "grid":
   cols = st.columns(len(recommendations))
@@ -135,7 +148,7 @@ if st.session_state.view_mode == "grid":
         details = rec["details"]
         if details:
           for key, val in details.items():
-            if key not in ["Response", "Poster", "Ratings"]:
+            if key not in EXCLUDED_FIELDS:
               st.markdown(f"✔ **{key}**: {val}")
         else:
           st.markdown("✔ **Status**: No extra details available")
@@ -157,7 +170,7 @@ else:
           details = rec["details"]
           if details:
             for key, val in details.items():
-              if key not in ["Response", "Poster", "Ratings"]:
+              if key not in EXCLUDED_FIELDS:
                 st.markdown(f"✔ **{key}**: {val}")
           else:
             st.markdown("✔ **Status**: No extra details available")
