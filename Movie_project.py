@@ -8,7 +8,6 @@ st.set_page_config(layout="wide", page_title="Movie Recommender")
 st.markdown(
     """
     <style>
-        /* Uniform container for movie poster cards in Grid view */
         .movie-card {
             background-color: #f9f9f9;
             border: 1px solid #e0e0e0;
@@ -21,7 +20,6 @@ st.markdown(
             justify-content: space-between;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
-        /* Enforce fixed dimensions for images so all boxes match perfectly */
         .movie-card img {
             width: 100% !important;
             height: 330px !important;
@@ -61,8 +59,7 @@ def get_recommendations(movie_name):
   distances, indexes = model.kneighbors([mvc], n_neighbors=5)
 
   recs = []
-  # Standard reliable No-Image thumbnail placeholder
-  FALLBACK_IMAGE = "https://icon-library.com/images/no-image-icon/no-image-icon-0.jpg"
+  FALLBACK_IMAGE = "noimage.png"
 
   for i in indexes[0][1:]:
     name = df.iloc[i]["name"]
@@ -70,19 +67,18 @@ def get_recommendations(movie_name):
     url = f"http://www.omdbapi.com/?i={mv_id}&apikey=b84e8a7c"
 
     poster_url = FALLBACK_IMAGE
+    movie_details = {}
     try:
       resp = requests.get(url, timeout=5)
       data = resp.json()
-      if (
-          data.get("Response") == "True"
-          and data.get("Poster")
-          and data.get("Poster") != "N/A"
-      ):
-        poster_url = data.get("Poster")
+      if data.get("Response") == "True":
+        if data.get("Poster") and data.get("Poster") != "N/A":
+          poster_url = data.get("Poster")
+        movie_details = data
     except Exception:
       pass
 
-    recs.append({"name": name, "poster": poster_url})
+    recs.append({"name": name, "poster": poster_url, "details": movie_details})
 
   return recs
 
@@ -126,12 +122,22 @@ if st.session_state.view_mode == "grid":
       st.markdown(
           f"""
                 <div class="movie-card">
-                    <img src="{rec['poster']}" onerror="this.onerror=null;this.src='https://icon-library.com/images/no-image-icon/no-image-icon-0.jpg';">
+                    <img src="{rec['poster']}" onerror="this.onerror=null;this.src='noimage.png';">
                     <div class="movie-title" title="{rec['name']}">{rec['name']}</div>
                 </div>
             """,
           unsafe_allow_html=True,
       )
+
+      # Expander for movie details with tick marks (✔)
+      with st.expander("ℹ️ Details"):
+        details = rec["details"]
+        if details:
+          for key, val in details.items():
+            if key not in ["Response", "Poster"]:
+              st.markdown(f"✔ **{key}**: {val}")
+        else:
+          st.markdown("✔ **Status**: No extra details available")
 else:
   for rec in recommendations:
     with st.container(border=True):
@@ -140,6 +146,15 @@ else:
         st.image(rec["poster"], width=70)
       with c2:
         st.markdown(
-            f"<h5 style='padding-top: 18px; margin: 0;'>{rec['name']}</h5>",
+            f"<h5 style='padding-top: 5px; margin: 0;'>{rec['name']}</h5>",
             unsafe_allow_html=True,
         )
+
+        with st.expander("ℹ️ View Movie Details"):
+          details = rec["details"]
+          if details:
+            for key, val in details.items():
+              if key not in ["Response", "Poster"]:
+                st.markdown(f"✔ **{key}**: {val}")
+          else:
+            st.markdown("✔ **Status**: No extra details available")
