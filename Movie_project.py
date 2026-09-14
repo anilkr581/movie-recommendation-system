@@ -88,6 +88,7 @@ def get_recommendations(movie_name):
 
 
 # Sidebar elements
+st.sidebar.image('flag.jpg')
 st.sidebar.title("🎬 About us")
 st.sidebar.write("We are a group of ML Engineers trying to learn NLP.")
 st.sidebar.title("📞 Contact us")
