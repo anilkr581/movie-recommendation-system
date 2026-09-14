@@ -84,7 +84,6 @@ def get_recommendations(movie_name):
 
 
 # Sidebar elements
-st.sidebar.image('flag.jpg')
 st.sidebar.title("🎬 About us")
 st.sidebar.write("We are a group of ML Engineers trying to learn NLP.")
 st.sidebar.title("📞 Contact us")
@@ -117,7 +116,7 @@ recommendations = get_recommendations(selected_movie)
 # Render View Layouts
 if st.session_state.view_mode == "grid":
   cols = st.columns(len(recommendations))
-  for col, rec in zip(cols, recommendations):
+  for idx, (col, rec) in enumerate(zip(cols, recommendations)):
     with col:
       st.markdown(
           f"""
@@ -129,8 +128,9 @@ if st.session_state.view_mode == "grid":
           unsafe_allow_html=True,
       )
 
-      # Expander for movie details with tick marks (✔)
-      with st.expander("ℹ️ Details"):
+      # Pop-up window using st.popover (Standard built-in Streamlit component for popups)
+      with st.popover("ℹ️ Details", use_container_width=True):
+        st.subheader(rec["name"])
         details = rec["details"]
         if details:
           for key, val in details.items():
@@ -141,16 +141,20 @@ if st.session_state.view_mode == "grid":
 else:
   for rec in recommendations:
     with st.container(border=True):
-      c1, c2 = st.columns([1, 10])
+      c1, c2, c3 = st.columns([1, 8, 2])
       with c1:
-        st.image(rec["poster"], width=70)
+        st.image(
+            rec["poster"], width=70, fallback="noimage.png"
+        )  # Streamlit native image fallback handler
       with c2:
         st.markdown(
-            f"<h5 style='padding-top: 5px; margin: 0;'>{rec['name']}</h5>",
+            f"<h5 style='padding-top: 15px; margin: 0;'>{rec['name']}</h5>",
             unsafe_allow_html=True,
         )
-
-        with st.expander("ℹ️ View Movie Details"):
+      with c3:
+        st.write("")
+        with st.popover("ℹ️ Details", use_container_width=True):
+          st.subheader(rec["name"])
           details = rec["details"]
           if details:
             for key, val in details.items():
